@@ -1,0 +1,36 @@
+{% load leaflet_tags %}
+<html>
+    <head>
+        {% leaflet_js %}
+        {% leaflet_css %}
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    </head>
+    <body>
+    <div>
+{#    <h1>from https://github.com/leplatrem/django-leaflet-geojson</h1>#}
+{#    <div style="height: 350px; width : 50%; float:left;">#}
+        <style>
+            .leaflet-container { height: 350px; width : 50%; float:left; }
+        </style>
+        {% leaflet_map "main" callback="main_map_init" %}
+
+        <script type="text/javascript">
+            function main_map_init (map, options) {
+                var dataurl = '{% url "data" %}';
+                // Download GeoJSON via Ajax
+                $.getJSON(dataurl, function (data) {
+                    // Add GeoJSON layer
+                    L.geoJson(data).addTo(map);
+                });
+            }
+        </script>
+    </div>
+    <div style="width: 50%; height: 350px; background-color: blue; float:right;">
+        <form action="#" method="get">
+            <input type="text" value="8" name="mytextbox" size="1"/>
+            <input type="submit" class="btn" value="Click" name="mybtn">
+        </form>
+    </div>
+    <div style="width: 100%; height: 50%; background-color: red; clear:both">-</div>
+  </body>
+</html>
