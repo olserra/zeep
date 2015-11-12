@@ -1,9 +1,14 @@
 {% load leaflet_tags %}
+{% load render_bundle from webpack_loader %}
 <html>
     <head>
         {% leaflet_js %}
         {% leaflet_css %}
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="https://cdn.rawgit.com/carlosrocha/react-data-components/master/css/table-twbs.css">
     </head>
     <body>
     <div>
@@ -25,12 +30,12 @@
             }
         </script>
     </div>
-    <div style="width: 50%; height: 350px; background-color: blue; float:right;">
-        <form action="#" method="get">
-            <input type="text" value="8" name="mytextbox" size="1"/>
-            <input type="submit" class="btn" value="Click" name="mybtn">
-        </form>
+    <div style="width: 50%; height: 350px; float:right;">
+        <div id="root"></div>
     </div>
-    <div style="width: 100%; height: 50%; background-color: red; clear:both">-</div>
+    <div style="width: 100%; height: 50%; clear:both">
+        <div class="container"><div id="content"></div></div>
+        {% render_bundle 'main' %}
+    </div>
   </body>
 </html>

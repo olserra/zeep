@@ -20,10 +20,10 @@ from .models import House
 
 BEWRD_URL = 'http://www.funda.nl/mijn/bewaard/'
 LOGIN_URL = 'https://www.funda.nl/mijn/login/'
+#USER = ''
+#PASSWD = ''
 USER = ''
 PASSWD = ''
-#USER =
-#PASSWD =
 GEOCODE_URL = 'https://geodata.nationaalgeoregister.nl/geocoder/Geocoder?zoekterm='
 
 

@@ -1,0 +1,32 @@
+{
+  "name": "zeep",
+  "version": "0.0.0",
+  "description": "zeepbellen op de kaart met leaflet en react",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/tbeg/zeep.git"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/tbeg/zeep/issues"
+  },
+  "devDependencies": {
+    "babel": "~6.0.15",
+    "babel-core": "~6.1.2",
+    "babel-loader": "~6.1.0",
+    "babel-preset-react": "~6.1.2",
+    "css-loader": "~0.22.0",
+    "d3": "^3.5.6",
+    "es6-promise": "~3.0.2",
+    "react": "~0.14.2",
+    "react-data-components": "~0.5.0",
+    "style-loader": "~0.13.0",
+    "webpack": "~1.12.3",
+    "webpack-bundle-tracker": "0.0.8"
+  }
+}

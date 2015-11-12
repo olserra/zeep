@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import sys
 import logging.config
 from project_runpy import env
 
@@ -44,6 +45,7 @@ INSTALLED_APPS = (
     'leaflet',
     'djgeojson',
     'bel',
+    'webpack_loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -184,6 +186,17 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "assets"),
+)
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'bundles/',
+        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json')
+    }
+}
 
 # HENDRIX THIS IS THE ONLY THING THAT NEEDS TO BE ADDED TO SETTINGS
 

@@ -22,6 +22,8 @@ from bel.views import HouseViewSet
 from django.views.generic import TemplateView
 from djgeojson.views import GeoJSONLayerView
 
+from django.contrib.gis import admin
+
 from bel.models import House
 
 router = DefaultRouter()
