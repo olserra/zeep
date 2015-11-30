@@ -1,4 +1,8 @@
-set funda user & passwd in utils.py (TODO: move to settings)
+**scrape saved houses from your private funda account....no particular use here ... just experimenting with scraping, hendrix (https://github.com/hendrix/hendrix) , geodjango and react js**
+
+..... working towards using hendrix task (as an alternative to celery) for running the import as a scheduled task (now its a mangement command)
+
+set funda user & passwd in utils.py (TODO: :)
 
 install docker & docker-compose
 
