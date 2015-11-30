@@ -7,6 +7,10 @@ docker-compose build
 
 drink coffee ...
 
+use management command to scrape your saved funda houses:
+docker-compose run zeepweb python manage.py manual_scrape
+
+
 start zeep:
 docker-compose run --service-ports zeepweb
 
