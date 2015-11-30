@@ -14,12 +14,17 @@ use management command to scrape your saved funda houses:
 docker-compose run zeepweb python manage.py manual_scrape
 ```
 
-start zeep:
+run:
 ```bash
-docker-compose run --service-ports zeepweb
+npm install .
 ```
 
 start:
 ```bash
 ./node_modules/.bin/webpack --config webpack.config.js --watch
+```
+
+start zeep:
+```bash
+docker-compose run --service-ports zeepweb
 ```
