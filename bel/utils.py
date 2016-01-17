@@ -1,27 +1,19 @@
 # coding=utf-8
-# hacked from https://github.com/markbarks/FundaScraper
-from datetime import date
-import httplib
 import re
 import sys
 import logging
-from urllib2 import URLError
-import urlparse
-from datetime import datetime
-import time
-
 import requests
+import urllib
+import unidecode
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 from django.contrib.gis.geos import GEOSGeometry
 
-from .models import House
+from models import House
 
-
+# TODO: move to settings?
 BEWRD_URL = 'http://www.funda.nl/mijn/bewaard/'
-LOGIN_URL = 'https://www.funda.nl/mijn/login/'
-#USER = ''
-#PASSWD = ''
+LOGIN_URL = 'https://www.funda.nl/mijn/login'
 USER = ''
 PASSWD = ''
 GEOCODE_URL = 'https://geodata.nationaalgeoregister.nl/geocoder/Geocoder?zoekterm='
@@ -33,125 +25,54 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.INFO)
 
 
-def get_html(link):
-    while True:
-        time.sleep(1)
-        response = requests.get(link.rstrip())
+def pagination():
+    session = requests.Session()
+    session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'})
+    tokenRequest = session.get('https://www.funda.nl/mijn/login/')
 
-        if "fout/500" in response.url:
-            print str(datetime.now()) + " ... retrying " + response.url
-            continue
-        break
+    request_validation_re = re.compile(r'<input name="__RequestVerificationToken" type="hidden" value="(.*?)" />')
+    tokens = request_validation_re.findall(tokenRequest.text)
 
-    if "fout/404" not in response.url and "fout/500" not in response.url:
-        html = response.text
-        if "Object niet (meer) beschikbaar" not in html:
-            return html
-    else:
-        print str(datetime.now()) + " ... failed " + response.url
-    return None
+    sessionCookies = tokenRequest.cookies
 
+    payload = {
+        '__RequestVerificationToken': tokens[0],
+        'Username': PASSWD,
+        'Password': USER,
+        'RememberMe': 'false'
+    }
 
-def parse_html(html):
-    try:
-        soup = BeautifulSoup(html)
-        specs = {}
-        header = soup.find_all("div", class_="prop-hdr")[0]
-        specs["Address"] = header.h1.get_text()
-        specs["Postcode"] = header.p.get_text().replace("    Tophuis", "")
-        specs["Areacode"] = specs["Postcode"].split(" ")[0]
-        nav = soup.find_all("p", class_="path-nav")[0]
-        specs["Area"] = nav.get_text(strip=True).split(">")[-1]
+    raw = urllib.urlencode(payload)
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+    session.post('https://www.funda.nl/mijn/login/', data=raw, cookies=sessionCookies, headers=headers)
 
-        for table in soup.find_all("table", class_="specs-cats"):
-            for tr in table.find_all('tr'):
-                if tr.th is not None and tr.td is not None and tr.td.get_text(strip=True):
-                    key = tr.th.get_text(strip=True)
-
-                    text = tr.td.get_text("|", strip=True)
-
-                    text = text.replace(u"\u00B2", u'')  # replace squares
-                    text = text.replace(u"\u00B3", u'')  # replace cubes
-                    text = re.sub("\W+m$", "", text)  # replace metres
-                    text = text.replace(u"\u20AC", u'').strip()  # replace euros
-
-                    if key in ['Vraagprijs', 'Laatste vraagprijs', 'Oorspronkelijke vraagprijs']:
-                        if "v.o.n." in text:
-                            text = text.replace(" v.o.n.", "")
-                            specs["Cost"] = "v.o.n."
-                        elif "k.k." in text:
-                            text = text.replace(" k.k.", "")
-                            specs["Cost"] = "k.k."
-                        text = text.replace(".", "")
-
-                    specs[key] = text
-        return specs
-    except BaseException as e:
-        print str(datetime.now()) + " ... failed: " + e.message
-        return None
-
-
-def get_all_keys(all_specs):
-    keys = set()
-    for specs in all_specs:
-        keys.update(specs.keys())
-    return sorted(list(keys))
-
-
-def write_links(datestr):
-    while True:
-        try:
-            s = requests.session()
-            s.keep_alive = False
-            login_data = {'Email': USER, 'Password': PASSWD}
-            s.post('https://www.funda.nl/mijn/login/', login_data)
-            break
-        except URLError as e:
-            print str(datetime.now()) + " [Errno 54] Connection reset by peer .. sleeping"
-            time.sleep(1)
     links = list()
-    i = 0
-    resp = s.get(BEWRD_URL + 'p1')
+    resp = session.get(BEWRD_URL + 'p1')
     soup = BeautifulSoup(resp.text)
-    while soup.findAll("a", class_="paging next"):
-        try:
-            i += 1
-            resp = s.get(BEWRD_URL + 'p' + str(i))
-            soup = BeautifulSoup(resp.text)
-            mydivs = soup.findAll("a", class_="object-street")
-            for div in mydivs:
-                links.append(urlparse.urljoin('http://www.funda.nl/koop', div['href'] + "kenmerken"))
-        except URLError as e:
-            print str(datetime.now()) + " [Errno 54] Connection reset by peer .. sleeping"
-            time.sleep(1)
-        except httplib.BadStatusLine as e:
-            print str(datetime.now()) + " BadStatusLine .. sleeping"
-            time.sleep(1)
-    return links
 
+    pagelinks = soup.find_all("a", attrs={"data-pagination-pagelink":True})
+    pages = []
+    for page in pagelinks:
+        pages.append(int(page["data-pagination-pagelink"]))
+    einde = max(pages) + 1
 
-def process_koop():
-    datestr = date.today().isoformat()
+    for i in range(1, einde):
+        links.append(BEWRD_URL + 'p' + str(i))
 
-    links = write_links(datestr)
+    for page in links:
+        html = session.get(page)
+        soup = BeautifulSoup(html.text)
+        houses = soup.find('ul', class_='search-results saved-objects').find_all('div', class_="search-result-content-inner")
+        for house in houses:
+            raw_address = house.find('h3', class_='search-result-title').text
+            raw_address_list = [s.strip() for s in raw_address.splitlines()]
+            street_nr = raw_address_list[1]
+            postalcode_city = raw_address_list[3]
+            price = int(unidecode.unidecode(house.find('span', class_='search-result-price').text).replace("EUR ", "").replace(".", "").replace("kk",""))
 
-    all_specs = list()
-    for link in links:
-        print str(datetime.now()) + " " + link
-        html = get_html(link)
-        if html is not None:
-            specs = parse_html(html)
-            specs["Id"] = parse_id(link)
-            specs["Link"] = link
-            all_specs.append(specs)
-    for specs in all_specs:
-        try:
-            address = specs["Postcode"].split()
-            try:
-                postcode = address[0] + " " + address[1]
-            except IndexError:
-                postcode = "onbekend"
-            pcode = specs["Address"] + " " + postcode
+            pcode = street_nr + " " + postalcode_city
             url = GEOCODE_URL + pcode
             response = requests.get(url)
             try:
@@ -164,21 +85,12 @@ def process_koop():
                 pnt.transform(4326)
             except:
                 rdxy = [0, 0]
-                #import pdb;pdb.set_trace()
                 pnt = GEOSGeometry('POINT({0} {1})'.format(0, 0), srid=4326)
 
-            House.objects.get_or_create(fuid=specs["Id"],
-                                        vraagprijs=specs["Vraagprijs"],
-                                        postcode=specs["Postcode"],
-                                        link=specs["Link"],
+            House.objects.get_or_create(fuid=0,
+                                        vraagprijs=price,
+                                        postcode=postalcode_city,
+                                        link='http://test',
                                         rdx=rdxy[0],
                                         rdy=rdxy[1],
                                         geom=pnt)
-        except KeyError:
-            pass
-
-def parse_id(link):
-    regex = re.compile("-(\d+)-")
-    r = regex.search(link)
-    return r.groups()[0]
-

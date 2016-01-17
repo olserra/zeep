@@ -37,5 +37,11 @@
         <div class="container"><div id="content"></div></div>
         {% render_bundle 'main' %}
     </div>
+    <form method="post">
+
+    {{ form.as_p }}
+
+    <input type="submit" value="Submit" />
+    </form>
   </body>
 </html>

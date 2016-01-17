@@ -1,4 +1,5 @@
 zeepstore:
+  container_name: zeep-data
   image: busybox
   volumes:
       - /var/lib/postgresql/data
@@ -18,6 +19,7 @@ zeepweb:
   # command: bash -c "sleep 3 && python viqueserver/manage.py runserver 0.0.0.0:8000"
   # command: bash -c "python viqueserver/manage.py runserver 0.0.0.0:8000"
   # command: bash -c "hx start --dev"
+  # command: bash -c "sleep 15 && hx start --dev --settings zeep.settings"
   volumes:
   - .:/zeep
   #tty: true
